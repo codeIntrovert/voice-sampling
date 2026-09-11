@@ -8,13 +8,25 @@ os.environ.setdefault("HF_HUB_DISABLE_SYMLINKS_WARNING", "1")
 import numpy as np
 import torch
 
-import config
+_threads = torch.get_num_threads()
+from silero_vad import get_speech_timestamps, load_silero_vad  # noqa: E402
+torch.set_num_threads(_threads)  # importing silero_vad forces torch to 1 thread (ECAPA ~2x slower); undo it.
+                                 # Keep this the only silero_vad import so the fix always applies.
+
+import config  # noqa: E402
+
+SR = config.SAMPLE_RATE
 
 
 @cache
 def vad_model():
-    from silero_vad import load_silero_vad
     return load_silero_vad()
+
+
+def speech_only(audio):
+    """Just the speech parts of a clip, silences cut out."""
+    stamps = get_speech_timestamps(torch.from_numpy(audio), vad_model(), sampling_rate=SR)
+    return np.concatenate([audio[s["start"]:s["end"]] for s in stamps]) if stamps else audio[:0]
 
 
 @cache

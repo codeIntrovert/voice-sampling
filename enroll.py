@@ -11,8 +11,6 @@ import sys
 
 import numpy as np
 import sounddevice as sd
-import torch
-from silero_vad import get_speech_timestamps
 
 import config
 import core
@@ -41,8 +39,7 @@ def main():
     if np.abs(audio).max() < 0.01:
         sys.exit("Recording is (almost) silent - check your mic, or MIC_DEVICE in config.py")
 
-    stamps = get_speech_timestamps(torch.from_numpy(audio), core.vad_model(), sampling_rate=SR)
-    speech = np.concatenate([audio[s["start"]:s["end"]] for s in stamps]) if stamps else audio[:0]
+    speech = core.speech_only(audio)
     print(f"{len(speech) / SR:.1f} s of speech found")
     if len(speech) < 5 * SR:
         sys.exit("Need at least 5 s of speech - try again.")
