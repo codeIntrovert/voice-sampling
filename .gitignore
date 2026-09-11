@@ -9,6 +9,10 @@ __pycache__/
 # Test Voice Samples
 *.wav
 
+# Local voice data (voiceprints, transcripts) and auto-downloaded models
+data/
+models/
+
 # Distribution / packaging
 .Python
 build/
