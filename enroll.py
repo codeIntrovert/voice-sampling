@@ -29,6 +29,12 @@ def record(seconds):
     return audio[:, 0]
 
 
+def voiceprints(speech):
+    """One voiceprint per 3 s window of speech (the whole clip if it's shorter)."""
+    starts = range(0, len(speech) - WINDOW + 1, HOP) or [0]
+    return np.array([core.embed(speech[i:i + WINDOW]) for i in starts])
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--seconds", type=int, default=20)
@@ -44,7 +50,7 @@ def main():
     if len(speech) < 5 * SR:
         sys.exit("Need at least 5 s of speech - try again.")
 
-    embs = np.array([core.embed(speech[i:i + WINDOW]) for i in range(0, len(speech) - WINDOW + 1, HOP)])
+    embs = voiceprints(speech)
     n = len(embs)
     consistency = ((embs @ embs.T).sum() - n) / (n * (n - 1))
     print(f"{n} voiceprints, self-similarity {consistency:.2f} (one clean voice is usually > 0.6)")
